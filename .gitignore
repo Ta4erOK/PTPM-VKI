@@ -1,0 +1,19 @@
+# IDE / ОС
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Логи (создаются при первом запуске программы)
+Logs/
+
+# Сборки
+dist/
+build/
