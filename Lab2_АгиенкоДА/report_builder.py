@@ -10,7 +10,7 @@ title = doc.add_heading("Отчёт по лабораторной работе �
 title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
 doc.add_paragraph("Тема: Юнит-тестирование проектов и автоматизация проверок")
-doc.add_paragraph("Студент: [ФИО]")
+doc.add_paragraph("Студент: Агиенко Данил Алексеевич")
 doc.add_paragraph("Группа: [группа]")
 doc.add_paragraph("Дисциплина: PTPM-VKI (программное тестирование)")
 
@@ -147,6 +147,6 @@ doc.add_paragraph(
     "Оба падения — ожидаемые и связаны с дефектами учебного модуля доставки."
 )
 
-OUT = "Отчет_ЛР2_ФИО.docx"
+OUT = "Отчет_ЛР2_АгиенкоДА.docx"
 doc.save(OUT)
 print(f"Сохранено: {OUT}")
