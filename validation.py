@@ -1,8 +1,3 @@
-"""Модуль валидации данных пользователя при регистрации.
-
-Вариант 2: проверка логина (телефон / email / строка), пароля,
-подтверждения пароля, а также маскирование паролей для логирования.
-"""
 import re
 from hashlib import sha256
 
@@ -32,19 +27,12 @@ LOGIN_MIN_LENGTH = 5
 
 
 def mask_password(password: str) -> str:
-    """Возвращает SHA-256 хэш пароля.
 
-    Маскирование: одинаковые пароли дают одинаковый хэш,
-    разные пароли — разные хэши. Пароль никогда не попадает в лог открыто.
-    """
-    return sha256(password.encode("utf-8")).hexdigest()
+    return sha256(password.encode("utf-8"))
 
 
 def validate_login(login: str):
-    """Проверяет логин.
 
-    Возвращает None, если логин корректен, либо строку с причиной ошибки.
-    """
     if not login:
         return "Логин не может быть пустым"
 
@@ -72,10 +60,7 @@ def validate_login(login: str):
 
 
 def validate_password(password: str, confirm: str):
-    """Проверяет пароль и его подтверждение.
 
-    Возвращает None, если всё корректно, либо строку с причиной ошибки.
-    """
     if not password:
         return "Пароль не может быть пустым"
 
@@ -95,7 +80,6 @@ def validate_password(password: str, confirm: str):
         elif ch in DIGITS:
             has_digit = True
         elif ch.isascii() and ch.isalpha():
-            # Любая ASCII-буква — это латиница, она запрещена
             return "Пароль содержит недопустимые символы: только кириллица, цифры и спецсимволы"
         else:
             has_special = True
@@ -115,11 +99,7 @@ def validate_password(password: str, confirm: str):
 
 
 def validate_registration(login: str, password: str, confirm: str):
-    """Комплексная проверка учётных данных при регистрации.
 
-    Возвращает кортеж (True, "") при успехе
-    или (False, "текст причины") при ошибке.
-    """
     error = validate_login(login)
     if error:
         return False, error

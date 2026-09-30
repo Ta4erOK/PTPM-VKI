@@ -1,8 +1,3 @@
-"""Настройка стандартного логгера Python (logging).
-
-Логирование ведётся параллельно в консоль и в файл.
-Папка Logs создаётся автоматически рядом с этим файлом.
-"""
 import logging
 import sys
 from pathlib import Path
@@ -17,7 +12,6 @@ date_format = "%Y-%m-%d %H:%M:%S"
 
 
 def setup_logger() -> None:
-    """Конфигурирует корневой логгер: консоль + файл."""
     LOG_DIR.mkdir(exist_ok=True)
 
     logging.basicConfig(
