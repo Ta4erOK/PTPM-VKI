@@ -11,7 +11,7 @@ title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
 doc.add_paragraph("Тема: Юнит-тестирование проектов и автоматизация проверок")
 doc.add_paragraph("Студент: Агиенко Данил Алексеевич")
-doc.add_paragraph("Группа: [группа]")
+doc.add_paragraph("Группа: 2307В2")
 doc.add_paragraph("Дисциплина: PTPM-VKI (программное тестирование)")
 
 doc.add_paragraph()
