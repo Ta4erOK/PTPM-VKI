@@ -29,28 +29,28 @@ hdr[3].text = "Упало (fail/error)"
 
 row = table.rows[1].cells
 row[0].text = "Свой проект (my_project.py)"
-row[1].text = "28"
-row[2].text = "28"
+row[1].text = "10"
+row[2].text = "10"
 row[3].text = "0"
 
 row = table.rows[2].cells
 row[0].text = "Модуль доставки (delivery_service.py)"
-row[1].text = "26"
-row[2].text = "24"
+row[1].text = "10"
+row[2].text = "8"
 row[3].text = "2"
 
 doc.add_paragraph()
 doc.add_paragraph(
-    "Итого написано 54 юнит-теста (минимальное требование — 20). "
+    "Итого написано 20 юнит-тестов (минимальное требование — 20, по 10 на каждый модуль). "
     "Тесты собственного проекта после исправления бага mask_password "
-    "проходят полностью (28/28). По модулю доставки выявлено 2 дефекта."
+    "проходят полностью (10/10). По модулю доставки выявлено 2 дефекта."
 )
 
 # --- Пункт Б ---------------------------------------------------------
 doc.add_heading("Пункт Б. Количество упавших тестов для кода доставки", level=1)
 
 p = doc.add_paragraph()
-run = p.add_run("Упало 2 теста из 26 (8 %).")
+run = p.add_run("Упало 2 теста из 10 (20 %).")
 run.bold = True
 
 doc.add_paragraph(
@@ -133,17 +133,17 @@ doc.add_paragraph(
 )
 doc.add_paragraph("Исправление: mask_password() теперь возвращает sha256(password).hexdigest().")
 doc.add_paragraph(
-    "После исправления все 28 тестов собственного проекта проходят успешно."
+    "После исправления все 10 тестов собственного проекта проходят успешно."
 )
 
 doc.add_paragraph()
 
 # --- Как запускать ----------------------------------------------------
 doc.add_heading("Запуск тестов", level=1)
-doc.add_paragraph("Из корня проекта (Lab2_FIO):")
+doc.add_paragraph("Из папки проекта (Lab2_АгиенкоДА):")
 doc.add_paragraph("python -m unittest discover -v   # полный прогон", style="Intense Quote")
 doc.add_paragraph(
-    "Результат итогового прогона: Ran 54 tests, FAILED (failures=2). "
+    "Результат итогового прогона: Ran 20 tests, FAILED (failures=2). "
     "Оба падения — ожидаемые и связаны с дефектами учебного модуля доставки."
 )
 
