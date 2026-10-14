@@ -1,7 +1,3 @@
-"""Тесты для собственного проекта из Лабораторной работы №1.
-
-Проект: валидация учётных данных при регистрации (my_project.py).
-"""
 import sys
 import unittest
 from pathlib import Path
