@@ -68,5 +68,6 @@ class TestMaskPassword(unittest.TestCase):
         self.assertTrue(mask_password(VALID_PASSWORD).isalnum())
 
 
+
 if __name__ == "__main__":
     unittest.main()
