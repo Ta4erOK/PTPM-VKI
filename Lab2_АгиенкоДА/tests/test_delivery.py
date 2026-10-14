@@ -58,7 +58,6 @@ class TestDeliveryDateCommon(unittest.TestCase):
 
 
 class TestDeliveryExpress(unittest.TestCase):
-    """Ожидаемое поведение экспресс-доставки (тут должны найтись баги)."""
 
     def test_express_is_more_expensive_than_regular(self):
         """Экспресс — ускоренная услуга, логично стоит дороже обычной."""
