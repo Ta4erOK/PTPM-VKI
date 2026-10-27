@@ -1,9 +1,11 @@
 """Тесты лабораторной работы №3: интеграционное тестирование и заглушки.
 
-Интеграционные тесты (3 шт.) проверяют сквозной сценарий Controller:
+Интеграционные тесты (4 шт.) проверяют сквозной сценарий Controller:
 ввод -> валидация -> БД -> сторонняя зависимость.
-Юнит-тесты проверяют новые модули (БД, имитация внешнего сервера,
-консольный ввод) и не дублируют проверки валидации из ЛР2.
+Юнит-тесты (4 шт.) проверяют новые модули (БД, имитация внешнего сервера,
+консольный ввод) и НЕ дублируют проверки правил из ЛР2: правила
+прогоняются через Controller, а проверяется поведение сценария
+(запись в БД + отправленное сообщение), а не тексты ошибок.
 """
 import sys
 import unittest
@@ -23,7 +25,7 @@ VALID_PASSWORD = "Пароль1!"
 INVALID_LOGIN = "ab"  # короче минимума (5) -> ошибка валидации
 
 
-def build_controller(db_path=":memory:", external=None) -> tuple[RegistrationController, RegistrationRepository, EmailServerStub]:
+def build_controller(db_path=":memory:", external=None):
     """Собрать контроллер с реальными БД/валидацией/вводом и переданной внешней зависимостью."""
     repository = RegistrationRepository(db_path)
     external = external if external is not None else EmailServerStub()
@@ -94,6 +96,79 @@ class TestIntegrationController(unittest.TestCase):
         self.assertEqual(external.outbox, [message])
         repository.close()
 
+    def test_all_validation_rules_reached_through_controller(self):
+        """Все правила валидации прогоняются сквозным сценарием.
+
+        Проверяется не текст ошибки (это проверено в ЛР2), а поведение
+        сценария: отказ -> запись в БД с result=0 и непустой ошибкой,
+        успех -> запись с result=1. Нужно для полного покрытия проекта.
+        """
+        external = EmailServerStub()
+        controller, repository, _ = build_controller(external=external)
+
+        invalid_logins = [
+            ("", "пустой логин"),
+            ("admin", "чёрный список"),
+            ("+79991234567", "телефон без дефисов"),
+            ("+a-999-123-4567", "телефон с буквой"),
+            ("user@example", "неполный email"),
+            ("user@@example.com", "двойное @"),
+            ("ab", "короткий логин"),
+            ("ivan петров", "пробел в логине"),
+            ("иван_2026", "кириллица в логине"),
+            ("ivan-2026", "дефис в логине"),
+        ]
+        for login, case in invalid_logins:
+            with self.subTest(case=case):
+                with patch("builtins.input", side_effect=[login, VALID_PASSWORD, VALID_PASSWORD]):
+                    message = controller.run()
+                record = repository.get(login, VALID_PASSWORD, VALID_PASSWORD)
+                self.assertIsNotNone(record, msg=case)
+                self.assertFalse(record["result"], msg=case)
+                self.assertTrue(record["error"], msg=case)
+                self.assertIn("отклонена", message, msg=case)
+
+        invalid_passwords = [
+            ("", "пустой пароль"),
+            ("аБв1!а", "короткий пароль"),
+            ("Password1!", "латиница в пароле"),
+            ("пароль1!", "нет верхнего регистра"),
+            ("ПАРОЛЬ1!", "нет нижнего регистра"),
+            ("Пароль!!", "нет цифры"),
+            ("Пароль11", "нет спецсимвола"),
+        ]
+        for password, case in invalid_passwords:
+            with self.subTest(case=case):
+                with patch("builtins.input", side_effect=[VALID_LOGIN, password, password]):
+                    message = controller.run()
+                record = repository.get(VALID_LOGIN, password, password)
+                self.assertIsNotNone(record, msg=case)
+                self.assertFalse(record["result"], msg=case)
+                self.assertTrue(record["error"], msg=case)
+                self.assertIn("отклонена", message, msg=case)
+
+        # Пароль и подтверждение не совпадают
+        with patch("builtins.input", side_effect=[VALID_LOGIN, VALID_PASSWORD, "Другой1!"]):
+            message = controller.run()
+        record = repository.get(VALID_LOGIN, VALID_PASSWORD, "Другой1!")
+        self.assertFalse(record["result"])
+        self.assertTrue(record["error"])
+        self.assertIn("отклонена", message)
+
+        # Успешные ветки: все три типа логина
+        for login in (VALID_LOGIN, "+7-999-123-4567", "user@example.com"):
+            with self.subTest(login=login):
+                with patch("builtins.input", side_effect=[login, VALID_PASSWORD, VALID_PASSWORD]):
+                    message = controller.run()
+                record = repository.get(login, VALID_PASSWORD, VALID_PASSWORD)
+                self.assertTrue(record["result"])
+                self.assertEqual(record["error"], "")
+                self.assertIn("выполнена успешно", message)
+
+        # Всё, что ушло наружу, — по одному сообщению на каждый запуск
+        self.assertEqual(len(external.outbox), len(invalid_logins) + len(invalid_passwords) + 4)
+        repository.close()
+
 
 class TestDatabase(unittest.TestCase):
     """Юнит-тесты класса работы с БД (новый модуль, не из ЛР2)."""
@@ -138,61 +213,6 @@ class TestUserInterface(unittest.TestCase):
         with patch("builtins.input", side_effect=[" ivan_2026 ", "Пароль1!", "Пароль1!"]):
             credentials = ConsoleUserInterface().get_credentials()
         self.assertEqual(credentials, (VALID_LOGIN, VALID_PASSWORD, VALID_PASSWORD))
-
-
-class TestValidatorContract(unittest.TestCase):
-    """Контракт класса-обёртки валидации: каждая ветка правил возвращает пару (bool, str).
-
-    Проверяется ТОЛЬКО структура результата (отказ/успех + непустая строка),
-    конкретные тексты ошибок здесь не проверяются — они покрыты в ЛР2.
-    Нужно для полного покрытия validation.py.
-    """
-
-    def test_all_rules_return_correct_tuple(self):
-        login_cases = [
-            ("", "пустой логин"),
-            ("admin", "чёрный список"),
-            ("+79991234567", "телефон без дефисов"),
-            ("+a-999-123-4567", "телефон с буквой"),
-            ("user@example", "неполный email"),
-            ("user@@example.com", "двойное @"),
-            ("ab", "короткий логин"),
-            ("ivan петров", "пробел в логине"),
-            ("иван_2026", "кириллица в логине"),
-            ("ivan-2026", "дефис в логине"),
-        ]
-        for login, case in login_cases:
-            with self.subTest(case=case):
-                ok, error = RegistrationValidator().validate(login, VALID_PASSWORD, VALID_PASSWORD)
-                self.assertIs(ok, False)
-                self.assertTrue(error)
-
-        password_cases = [
-            ("", "пустой пароль"),
-            ("аБв1!а", "короткий пароль"),
-            ("Password1!", "латиница"),
-            ("пароль1!", "нет верхнего регистра"),
-            ("ПАРОЛЬ1!", "нет нижнего регистра"),
-            ("Пароль!!", "нет цифры"),
-            ("Пароль11", "нет спецсимвола"),
-        ]
-        for password, case in password_cases:
-            with self.subTest(case=case):
-                ok, error = RegistrationValidator().validate(VALID_LOGIN, password, password)
-                self.assertIs(ok, False)
-                self.assertTrue(error)
-
-        # Несовпадение подтверждения
-        ok, error = RegistrationValidator().validate(VALID_LOGIN, VALID_PASSWORD, "Другой1!")
-        self.assertIs(ok, False)
-        self.assertTrue(error)
-
-        # Success-ветки контракта для всех трёх типов логина (формат пары, не сообщения)
-        for login in (VALID_LOGIN, "+7-999-123-4567", "user@example.com"):
-            with self.subTest(login=login):
-                ok, error = RegistrationValidator().validate(login, VALID_PASSWORD, VALID_PASSWORD)
-                self.assertIs(ok, True)
-                self.assertEqual(error, "")
 
 
 if __name__ == "__main__":  # pragma: no cover

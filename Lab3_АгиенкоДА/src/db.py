@@ -11,7 +11,7 @@ class RegistrationRepository:
     """CRUD-операции над таблицей registrations."""
 
     def __init__(self, db_path: str = ":memory:"):
-        # ":memory:" — база в памяти, удобна для тестов
+        # ":memory:" — база в памяти,
         self._conn = sqlite3.connect(db_path)
         self._conn.row_factory = sqlite3.Row
         self._create_table()
