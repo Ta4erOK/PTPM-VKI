@@ -114,5 +114,5 @@ class TestContract(unittest.TestCase):
                 self.assertEqual(Converter.do(x), expected)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()
