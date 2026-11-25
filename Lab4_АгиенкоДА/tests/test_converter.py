@@ -39,6 +39,10 @@ class TestPositiveRange(unittest.TestCase):
 
     def test_fraction_is_truncated(self):
         self.assertEqual(Converter.do(42.9), 42)
+    def test_fraction_is_truncated123(self):
+        self.assertEqual(Converter.do(60.0), 60)
+
+
 
 
 class TestZero(unittest.TestCase):
@@ -85,6 +89,8 @@ class TestBottomRange(unittest.TestCase):
 
     def test_very_small_value(self):
         self.assertEqual(Converter.do(-1000.0), -2000)
+    def test_fraction_is_truncated123434(self):
+        self.assertEqual(Converter.do(-60.0), -2000)
 
 
 class TestContract(unittest.TestCase):
